@@ -73,3 +73,8 @@ func snippetCreate(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte("Create a new snippet"))
 }
+
+func downloadHandler(w http.ResponseWriter, r *http.Request) {
+	// the ServeFile does not sanitize file path. if you are constrcting it from user data sanitize it first. filepath.clean()
+	http.ServeFile(w, r, "./ui/static/file.zip")
+}

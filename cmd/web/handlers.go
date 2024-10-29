@@ -55,17 +55,20 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 		// so if you want to send a non-200 code you must call w.WriteHeader before any call to w.Write
 
 		// This
-		w.WriteHeader(405)
-		w.Header().Set("Allow", http.MethodPost)
-		w.Write([]byte("Method not allowed"))
+		// w.WriteHeader(405)
+		// w.Header().Set("Allow", http.MethodPost)
+		// w.Write([]byte("Method not allowed"))
 
 		// Or helper
 
 		// http.StatusMethodNotAllowed = 405
-		app.clientError(w, http.StatusMethodNotAllowed)
+		// app.clientError(w, http.StatusMethodNotAllowed)
 
 		// to delete the system generate headers
-		w.Header()["Date"] = nil
+		// w.Header()["Date"] = nil
+
+		w.Header().Set("Allow", http.MethodPost)
+		app.clientError(w, http.StatusMethodNotAllowed) // Use the clientError() helper
 
 		return
 	}

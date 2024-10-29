@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+// the Exec, Query and QueryRow uses prepared statement for each query
+// This can create performance issue for complex queries or insertion of alot of data
+// You can create a prepared statement yourself and reuse it but it is linked to a pool
+// If the pool is not used them the statement is prepared again in another pool
+// consider the pros and cons before doing any performance optimization
+
 type Snippet struct {
 	ID      int
 	Title   string
@@ -112,6 +118,7 @@ func (m *SnippetModel) Latest() ([]*Snippet, error) {
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
+
 	// If everything went OK then return the Snippets slice.
 	return snippets, nil
 }

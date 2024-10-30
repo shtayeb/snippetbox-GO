@@ -3,18 +3,21 @@ package main
 import (
 	"database/sql"
 	"flag"
-	_ "github.com/lib/pq"
-	"github.com/shtayeb/snippetbox/internal/models"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	_ "github.com/lib/pq"
+	"github.com/shtayeb/snippetbox/internal/models"
 )
 
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	snippets *models.SnippetModel
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	snippets      *models.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 // Closures for dependency injection
@@ -42,11 +45,18 @@ func main() {
 	}
 	defer db.Close()
 
+	// Initialize a new template cache
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
 	// Initialize a new instance of our application struct. containing the dependencies
 	app := &application{
-		errorLog: errorLog,
-		infoLog:  infoLog,
-		snippets: &models.SnippetModel{DB: db},
+		errorLog:      errorLog,
+		infoLog:       infoLog,
+		snippets:      &models.SnippetModel{DB: db},
+		templateCache: templateCache,
 	}
 
 	// TO use our custom logger across our application we need to create a custom http.Server

@@ -30,5 +30,7 @@ func (app *application) routes() http.Handler {
 
 	// pass the servemux as the 'next' parameter to the secureHeaders middleware.
 	// because secureHeaders is just a function, and the function returns a http.Handler
-	return secureHeaders(mux)
+	// return secureHeaders(mux)
+	// wraps the existing chain with the logRequest middleware
+	return app.logRequest(secureHeaders(mux))
 }

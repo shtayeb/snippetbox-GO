@@ -3,7 +3,7 @@ package main
 import "net/http"
 
 // The routes() method returns a servemux containing our application routes.
-func (app *application) routes() *http.ServeMux {
+func (app *application) routes() http.Handler {
 	// mux is http.Handler and it has ServerHttp() method so it satisfies the interface
 	// the mux takes request and passes it to the necesssary handler based on route
 	// You can think of a Go web application as a chain of ServeHTTP() methods being called one after another.
@@ -28,5 +28,7 @@ func (app *application) routes() *http.ServeMux {
 	mux.HandleFunc("/snippet/view", app.snippetView)
 	mux.HandleFunc("/snippet/create", app.snippetCreate)
 
-	return mux
+	// pass the servemux as the 'next' parameter to the secureHeaders middleware.
+	// because secureHeaders is just a function, and the function returns a http.Handler
+	return secureHeaders(mux)
 }

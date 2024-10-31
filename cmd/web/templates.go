@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/shtayeb/snippetbox/internal/models"
+	"time"
 )
 
 // Define a templateData type to act as the holding structure for
@@ -13,6 +14,19 @@ type templateData struct {
 	CurrentYear int
 	Snippet     *models.Snippet
 	Snippets    []*models.Snippet
+}
+
+// custom template functions (like
+// our humanDate() function) can accept as many parameters as they
+// need to, but they must return one value only. The only exception to
+// this is if you want to return an error as the second value, in which
+// case that’s OK too.
+func humanDate(t time.Time) string {
+	return t.Format("03 Jan 2006 at 15:04")
+}
+
+var functions = template.FuncMap{
+	"humanDate": humanDate,
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
@@ -31,8 +45,11 @@ func newTemplateCache() (map[string]*template.Template, error) {
 		// extract the filename (like 'home.tmpl') from the full path
 		name := filepath.Base(page)
 
+		// the template template.FuncMap must be registered with the template set
+
 		// Parse the base template file into a template set
-		ts, err := template.ParseFiles("./ui/html/base.tmpl")
+		// ts, err := template.ParseFiles("./ui/html/base.tmpl")
+		ts, err := template.New(name).Funcs(functions).ParseFiles("./ui/html/base.tmpl")
 		if err != nil {
 			return nil, err
 		}

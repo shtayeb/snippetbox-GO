@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 
+	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
 )
 
@@ -14,7 +15,14 @@ func (app *application) routes() http.Handler {
 	//
 	// Requests are handled concurrently - all http requests are served on their own go routines
 	// This helps with speed but also creates `race condition` when accessing shared resources from handles
-	mux := http.NewServeMux()
+	// mux := http.NewServeMux()
+
+	router := httprouter.New()
+
+	// Custom error handler methods
+	router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		app.notFound(w)
+	})
 
 	// relative to the project directory
 	// To disable directory listing of fileserver.
@@ -22,15 +30,16 @@ func (app *application) routes() http.Handler {
 	// 2- create a custom implementation of http.FileSystem and have it return an os.ErrNotExist error for directories
 	// http.Dir("./ui/static/")
 	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})
-	mux.Handle("/static", http.NotFoundHandler())
+	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", fileServer))
 
 	// /static/ - is subtree path. subtree paths end with /
 	// /test - is redirected to /test/. if a subtree is registered
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
+	// router.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet/view", app.snippetView)
-	mux.HandleFunc("/snippet/create", app.snippetCreate)
+	router.HandlerFunc(http.MethodGet, "/", app.home)
+	router.HandlerFunc(http.MethodGet, "/snippet/view/:id", app.snippetView)
+	router.HandlerFunc(http.MethodGet, "/snippet/create", app.snippetCreate)
+	router.HandlerFunc(http.MethodPost, "/snippet/create", app.snippetCreatePost)
 
 	// pass the servemux as the 'next' parameter to the secureHeaders middleware.
 	// because secureHeaders is just a function, and the function returns a http.Handler
@@ -43,5 +52,5 @@ func (app *application) routes() http.Handler {
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 
 	// return the 'standard' middleware chain followed by the servemux
-	return standard.Then(mux)
+	return standard.Then(router)
 }

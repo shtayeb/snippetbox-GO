@@ -6,15 +6,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/julienschmidt/httprouter"
 	"github.com/shtayeb/snippetbox/internal/models"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
-
 	snippets, err := app.snippets.Latest()
 	if err != nil {
 		app.serverError(w, err)
@@ -30,7 +26,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	params := httprouter.ParamsFromContext(r.Context())
+
+	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil || id < 1 {
 		app.notFound(w)
 		return
@@ -57,30 +55,30 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	app.render(w, http.StatusOK, "view.tmpl", data)
 }
 
-func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		// w.WriteHeader can be called once per request and after the status code is set it cant be changed
-		// if you dont call w.WriteHeader explicitly, then the first call to w.Write will automatically send a 200 ok
-		// so if you want to send a non-200 code you must call w.WriteHeader before any call to w.Write
+func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
+	// if r.Method != http.MethodPost {
+	// w.WriteHeader can be called once per request and after the status code is set it cant be changed
+	// if you dont call w.WriteHeader explicitly, then the first call to w.Write will automatically send a 200 ok
+	// so if you want to send a non-200 code you must call w.WriteHeader before any call to w.Write
 
-		// This
-		// w.WriteHeader(405)
-		// w.Header().Set("Allow", http.MethodPost)
-		// w.Write([]byte("Method not allowed"))
+	// This
+	// w.WriteHeader(405)
+	// w.Header().Set("Allow", http.MethodPost)
+	// w.Write([]byte("Method not allowed"))
 
-		// Or helper
+	// Or helper
 
-		// http.StatusMethodNotAllowed = 405
-		// app.clientError(w, http.StatusMethodNotAllowed)
+	// http.StatusMethodNotAllowed = 405
+	// app.clientError(w, http.StatusMethodNotAllowed)
 
-		// to delete the system generate headers
-		// w.Header()["Date"] = nil
+	// to delete the system generate headers
+	// w.Header()["Date"] = nil
 
-		w.Header().Set("Allow", http.MethodPost)
-		app.clientError(w, http.StatusMethodNotAllowed) // Use the clientError() helper
-
-		return
-	}
+	// w.Header().Set("Allow", http.MethodPost)
+	// app.clientError(w, http.StatusMethodNotAllowed) // Use the clientError() helper
+	//
+	// return
+	// }
 
 	// Create some variables holding dummy data. We'll remove these later on
 	// during the build.
@@ -95,7 +93,10 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view?id=%d", id), http.StatusSeeOther)
+}
 
+func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Display the form for creating a new snippet..."))
 }
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {

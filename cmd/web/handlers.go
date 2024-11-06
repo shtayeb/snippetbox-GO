@@ -82,9 +82,28 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 
 	// Create some variables holding dummy data. We'll remove these later on
 	// during the build.
-	title := "O snail"
-	content := "O snai Climb Mount Fuji"
-	expires := 7
+
+	// Case ParseForm() which add any data in POST,PATCH,PUT request bodies to the r.PostForm map.
+
+	// Limit the request body size to 4096 bytes
+	// r.Body = http.MaxBytesReader(w, r.Body, 4096)
+
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	title := r.PostForm.Get("title")
+	content := r.PostForm.Get("content")
+
+	// The r.PostForm.Get() method always returns the form data as a string
+	// However wer are expecting our 'expires' value to be a number, so we need to manually convert it
+	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
 
 	id, err := app.snippets.Insert(title, content, expires)
 	if err != nil {
@@ -92,7 +111,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/snippet/view?id=%d", id), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {

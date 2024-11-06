@@ -8,18 +8,22 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
+	"github.com/alexedwards/scs/postgresstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	_ "github.com/lib/pq"
 	"github.com/shtayeb/snippetbox/internal/models"
 )
 
 type application struct {
-	errorLog      *log.Logger
-	infoLog       *log.Logger
-	snippets      *models.SnippetModel
-	templateCache map[string]*template.Template
-	formDecoder   *form.Decoder
+	errorLog       *log.Logger
+	infoLog        *log.Logger
+	snippets       *models.SnippetModel
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 // Closures for dependency injection
@@ -56,13 +60,18 @@ func main() {
 	// Initialize a decoder instance
 	formDecoder := form.NewDecoder()
 
+	sessionManager := scs.New()
+	sessionManager.Store = postgresstore.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
+
 	// Initialize a new instance of our application struct. containing the dependencies
 	app := &application{
-		errorLog:      errorLog,
-		infoLog:       infoLog,
-		snippets:      &models.SnippetModel{DB: db},
-		templateCache: templateCache,
-		formDecoder:   formDecoder,
+		errorLog:       errorLog,
+		infoLog:        infoLog,
+		snippets:       &models.SnippetModel{DB: db},
+		templateCache:  templateCache,
+		formDecoder:    formDecoder,
+		sessionManager: sessionManager,
 	}
 
 	// TO use our custom logger across our application we need to create a custom http.Server

@@ -36,10 +36,12 @@ func (app *application) routes() http.Handler {
 	// /test - is redirected to /test/. if a subtree is registered
 	// router.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	router.HandlerFunc(http.MethodGet, "/", app.home)
-	router.HandlerFunc(http.MethodGet, "/snippet/view/:id", app.snippetView)
-	router.HandlerFunc(http.MethodGet, "/snippet/create", app.snippetCreate)
-	router.HandlerFunc(http.MethodPost, "/snippet/create", app.snippetCreatePost)
+	dynamic := alice.New(app.sessionManager.LoadAndSave)
+
+	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(app.home))
+	router.Handler(http.MethodGet, "/snippet/view/:id", dynamic.ThenFunc(app.snippetView))
+	router.Handler(http.MethodGet, "/snippet/create", dynamic.ThenFunc(app.snippetCreate))
+	router.Handler(http.MethodPost, "/snippet/create", dynamic.ThenFunc(app.snippetCreatePost))
 
 	// pass the servemux as the 'next' parameter to the secureHeaders middleware.
 	// because secureHeaders is just a function, and the function returns a http.Handler

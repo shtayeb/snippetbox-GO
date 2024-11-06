@@ -57,6 +57,13 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	app.render(w, http.StatusOK, "view.tmpl", data)
 }
 
+type snippetCreateForm struct {
+	Title       string
+	Content     string
+	Expires     int
+	FieldErrors map[string]string
+}
+
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	// if r.Method != http.MethodPost {
 	// w.WriteHeader can be called once per request and after the status code is set it cant be changed
@@ -96,9 +103,6 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	title := r.PostForm.Get("title")
-	content := r.PostForm.Get("content")
-
 	// The r.PostForm.Get() method always returns the form data as a string
 	// However wer are expecting our 'expires' value to be a number, so we need to manually convert it
 	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
@@ -107,8 +111,14 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	form := snippetCreateForm{
+		Title:       r.PostForm.Get("title"),
+		Content:     r.PostForm.Get("Content"),
+		Expires:     expires,
+		FieldErrors: map[string]string{},
+	}
+
 	// Initizlize a map to hold any validation errors for the form fields
-	fieldErros := make(map[string]string)
 
 	// Note: When we check the length of the title field, we’re using
 	// the utf8.RuneCountInString() function — not Go’s len()
@@ -116,26 +126,28 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	// characters in the title rather than the number of bytes. To
 	// illustrate the difference, the string "Zoë" has 3 characters but a
 	// length of 4 bytes because of the umlauted ë character.
-	if strings.TrimSpace(title) == "" {
-		fieldErros["title"] = "This field cannot be blank"
-	} else if utf8.RuneCountInString(title) > 100 {
-		fieldErros["title"] = "This field cannot be more than 100 characters"
+	if strings.TrimSpace(form.Title) == "" {
+		form.FieldErrors["title"] = "This field cannot be blank"
+	} else if utf8.RuneCountInString(form.Title) > 100 {
+		form.FieldErrors["title"] = "This field cannot be more than 100 characters"
 	}
 
-	if strings.TrimSpace(content) == "" {
-		fieldErros["content"] = "This field cannot be blank"
+	if strings.TrimSpace(form.Content) == "" {
+		form.FieldErrors["content"] = "This field cannot be blank"
 	}
 
 	if expires != 1 && expires != 7 && expires != 365 {
-		fieldErros["content"] = "This field cannot be blank"
+		form.FieldErrors["content"] = "This field cannot be blank"
 	}
 
-	if len(fieldErros) > 0 {
-		fmt.Fprint(w, fieldErros)
+	if len(form.FieldErrors) > 0 {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, http.StatusUnprocessableEntity, "create.tmpl", data)
 		return
 	}
 
-	id, err := app.snippets.Insert(title, content, expires)
+	id, err := app.snippets.Insert(form.Title, form.Content, expires)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -146,6 +158,10 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
+
+	data.Form = snippetCreateForm{
+		Expires: 365,
+	}
 
 	app.render(w, http.StatusOK, "create.tmpl", data)
 }

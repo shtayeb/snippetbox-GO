@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/go-playground/form/v4"
 	_ "github.com/lib/pq"
 	"github.com/shtayeb/snippetbox/internal/models"
 )
@@ -18,6 +19,7 @@ type application struct {
 	infoLog       *log.Logger
 	snippets      *models.SnippetModel
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder
 }
 
 // Closures for dependency injection
@@ -51,12 +53,16 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
+	// Initialize a decoder instance
+	formDecoder := form.NewDecoder()
+
 	// Initialize a new instance of our application struct. containing the dependencies
 	app := &application{
 		errorLog:      errorLog,
 		infoLog:       infoLog,
 		snippets:      &models.SnippetModel{DB: db},
 		templateCache: templateCache,
+		formDecoder:   formDecoder,
 	}
 
 	// TO use our custom logger across our application we need to create a custom http.Server

@@ -58,64 +58,26 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 
 // type. Embedding this means that our snippetCreateForm "inherits" all the
 // fields and methods of our Validator type (including the FieldErrors field).
+
+// Update our snippetCreateForm struct to include struct tags which tell the
+// decoder how to map HTML form values into the different struct fields. So, for
+// example, here we're telling the decoder to store the value from the HTML form
+// input with the name "title" in the Title field. The struct tag `form:"-"`
+// tells the decoder to completely ignore a field during decoding.
 type snippetCreateForm struct {
-	Title   string
-	Content string
-	Expires int
-	validator.Validator
+	Title               string `form:"title"`
+	Content             string `form:"content"`
+	Expires             int    `form:"expires"`
+	validator.Validator `form:"-"`
 }
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-	// if r.Method != http.MethodPost {
-	// w.WriteHeader can be called once per request and after the status code is set it cant be changed
-	// if you dont call w.WriteHeader explicitly, then the first call to w.Write will automatically send a 200 ok
-	// so if you want to send a non-200 code you must call w.WriteHeader before any call to w.Write
+	var form snippetCreateForm
 
-	// This
-	// w.WriteHeader(405)
-	// w.Header().Set("Allow", http.MethodPost)
-	// w.Write([]byte("Method not allowed"))
-
-	// Or helper
-
-	// http.StatusMethodNotAllowed = 405
-	// app.clientError(w, http.StatusMethodNotAllowed)
-
-	// to delete the system generate headers
-	// w.Header()["Date"] = nil
-
-	// w.Header().Set("Allow", http.MethodPost)
-	// app.clientError(w, http.StatusMethodNotAllowed) // Use the clientError() helper
-	//
-	// return
-	// }
-
-	// Create some variables holding dummy data. We'll remove these later on
-	// during the build.
-
-	// Case ParseForm() which add any data in POST,PATCH,PUT request bodies to the r.PostForm map.
-
-	// Limit the request body size to 4096 bytes
-	// r.Body = http.MaxBytesReader(w, r.Body, 4096)
-
-	err := r.ParseForm()
+	err := app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
-	}
-
-	// The r.PostForm.Get() method always returns the form data as a string
-	// However wer are expecting our 'expires' value to be a number, so we need to manually convert it
-	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-
-	form := snippetCreateForm{
-		Title:   r.PostForm.Get("title"),
-		Content: r.PostForm.Get("content"),
-		Expires: expires,
 	}
 
 	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
@@ -131,7 +93,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	id, err := app.snippets.Insert(form.Title, form.Content, expires)
+	id, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
 	if err != nil {
 		app.serverError(w, err)
 		return

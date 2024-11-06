@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/shtayeb/snippetbox/internal/models"
@@ -102,6 +104,34 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	// Initizlize a map to hold any validation errors for the form fields
+	fieldErros := make(map[string]string)
+
+	// Note: When we check the length of the title field, we’re using
+	// the utf8.RuneCountInString() function — not Go’s len()
+	// function. This is because we want to count the number of
+	// characters in the title rather than the number of bytes. To
+	// illustrate the difference, the string "Zoë" has 3 characters but a
+	// length of 4 bytes because of the umlauted ë character.
+	if strings.TrimSpace(title) == "" {
+		fieldErros["title"] = "This field cannot be blank"
+	} else if utf8.RuneCountInString(title) > 100 {
+		fieldErros["title"] = "This field cannot be more than 100 characters"
+	}
+
+	if strings.TrimSpace(content) == "" {
+		fieldErros["content"] = "This field cannot be blank"
+	}
+
+	if expires != 1 && expires != 7 && expires != 365 {
+		fieldErros["content"] = "This field cannot be blank"
+	}
+
+	if len(fieldErros) > 0 {
+		fmt.Fprint(w, fieldErros)
 		return
 	}
 

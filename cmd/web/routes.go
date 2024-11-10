@@ -5,6 +5,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
+	"github.com/shtayeb/snippetbox/ui"
 )
 
 // The routes() method returns a servemux containing our application routes.
@@ -29,8 +30,11 @@ func (app *application) routes() http.Handler {
 	// 1- create an empty index.html file in the directory so that it can be fetched when a directory is requested
 	// 2- create a custom implementation of http.FileSystem and have it return an os.ErrNotExist error for directories
 	// http.Dir("./ui/static/")
-	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})
-	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", fileServer))
+	// fileServer := http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})
+	//
+	fileServer := http.FileServer(http.FS(ui.Files))
+	// router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", fileServer))
+	router.Handler(http.MethodGet, "/static/*filepath", fileServer)
 
 	// /static/ - is subtree path. subtree paths end with /
 	// /test - is redirected to /test/. if a subtree is registered

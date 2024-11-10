@@ -35,7 +35,7 @@ func (app *application) routes() http.Handler {
 	// /static/ - is subtree path. subtree paths end with /
 	// /test - is redirected to /test/. if a subtree is registered
 	// router.Handle("/static/", http.StripPrefix("/static", fileServer))
-	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf)
+	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
 
 	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(app.home))
 	router.Handler(http.MethodGet, "/snippet/view/:id", dynamic.ThenFunc(app.snippetView))

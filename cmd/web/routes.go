@@ -36,6 +36,8 @@ func (app *application) routes() http.Handler {
 	// router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", fileServer))
 	router.Handler(http.MethodGet, "/static/*filepath", fileServer)
 
+	router.HandlerFunc(http.MethodGet, "/ping", ping)
+
 	// /static/ - is subtree path. subtree paths end with /
 	// /test - is redirected to /test/. if a subtree is registered
 	// router.Handle("/static/", http.StripPrefix("/static", fileServer))

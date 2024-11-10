@@ -29,7 +29,13 @@ type templateData struct {
 // this is if you want to return an error as the second value, in which
 // case that’s OK too.
 func humanDate(t time.Time) string {
-	return t.Format("03 Jan 2006 at 15:04")
+	// return the empty string if time has teh zero value
+	if t.IsZero() {
+		return ""
+	}
+
+	// Convert the time to UTC before formatting it.
+	return t.UTC().Format("02 Jan 2006 at 15:04")
 }
 
 var functions = template.FuncMap{

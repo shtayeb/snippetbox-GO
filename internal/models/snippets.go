@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+type SnippetModelInterface interface {
+	Insert(title string, content string, expires int) (int, error)
+	Get(id int) (*Snippet, error)
+	Latest() ([]*Snippet, error)
+}
+
 // the Exec, Query and QueryRow uses prepared statement for each query
 // This can create performance issue for complex queries or insertion of alot of data
 // You can create a prepared statement yourself and reuse it but it is linked to a pool

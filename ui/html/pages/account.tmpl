@@ -11,9 +11,14 @@
 <th>Email</th>
 <td>{{.Email}}</td>
 </tr>
-<tr><th>Joined</th>
+<tr>
+<th>Joined</th>
 <td>{{humanDate .Created}}</td>
 </tr>
-</table>
-{{end }}
+<tr>
+<!-- Add a link to the change password form -->
+<th>Password</th>
+<td><a href="/account/password/update">Change password</a></td>
+</tr>
+</table>{{end }}
 {{end}}

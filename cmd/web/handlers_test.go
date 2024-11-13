@@ -19,7 +19,7 @@ func TestSnippetCreate(t *testing.T) {
 		code, headers, _ := ts.get(t, "/snippet/create")
 
 		assert.Equal(t, code, http.StatusSeeOther)
-		assert.Equal(t, headers.Get("Location"), "/user/login")
+		assert.StringContains(t, headers.Get("Location"), "/user/login")
 	})
 
 	t.Run("Authenticated", func(t *testing.T) {

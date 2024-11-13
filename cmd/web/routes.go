@@ -59,6 +59,8 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodPost, "/snippet/create", protected.ThenFunc(app.snippetCreatePost))
 	router.Handler(http.MethodPost, "/user/logout", protected.ThenFunc(app.userLogoutPost))
 	router.Handler(http.MethodGet, "/account/view", protected.ThenFunc(app.accountView))
+	router.Handler(http.MethodGet, "/account/password/update", protected.ThenFunc(app.accountPasswordUpdate))
+	router.Handler(http.MethodPost, "/account/password/update", protected.ThenFunc(app.accountPasswordUpdatePost))
 
 	// pass the servemux as the 'next' parameter to the secureHeaders middleware.
 	// because secureHeaders is just a function, and the function returns a http.Handler

@@ -63,3 +63,6 @@ Terminate at first fail
 ```shell
 go test -failfast ./cmd/web
 ```
+
+## Resources
+- [Let's GO](https://lets-go.alexedwards.net/) Book by Alex Edwards

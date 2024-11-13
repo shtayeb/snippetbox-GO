@@ -46,7 +46,8 @@ func noSurf(next http.Handler) http.Handler {
 func (app *application) requireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !app.isAuthenticated(r) {
-			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+			// Get the Location and save somewhere
+			http.Redirect(w, r, fmt.Sprintf("/user/login?next=%v", r.URL.Path), http.StatusSeeOther)
 			return
 		}
 

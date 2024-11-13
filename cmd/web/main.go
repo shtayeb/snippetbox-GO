@@ -19,6 +19,7 @@ import (
 )
 
 type application struct {
+	debug          bool
 	errorLog       *log.Logger
 	infoLog        *log.Logger
 	snippets       models.SnippetModelInterface
@@ -37,6 +38,9 @@ func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	// database dsn
 	dsn := flag.String("dsn", "postgres://go_user:go_1234@localhost/snippetbox", "Database source")
+	// Debug flag to dispaly errors in the browser
+	debug := flag.Bool("debug", false, "Enable debug mode")
+
 	flag.Parse()
 
 	// Logging
@@ -71,6 +75,7 @@ func main() {
 
 	// Initialize a new instance of our application struct. containing the dependencies
 	app := &application{
+		debug:          *debug,
 		errorLog:       errorLog,
 		infoLog:        infoLog,
 		snippets:       &models.SnippetModel{DB: db},

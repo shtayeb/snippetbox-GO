@@ -46,5 +46,4 @@ func TestUserModelExists(t *testing.T) {
 			assert.NilError(t, err)
 		})
 	}
-
 }
